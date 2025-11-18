@@ -1,0 +1,217 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>PhishGuard</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 12px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+            sans-serif;
+            background: #fff7ed;
+            min-width: 320px;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .logo-block {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logo-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            background: radial-gradient(circle at top left, #fb923c, #f97316);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .title-block {
+            display: flex;
+            flex-direction: column;
+        }
+        .title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #7c2d12;
+        }
+        .subtitle {
+            font-size: 11px;
+            color: #9a3412;
+        }
+        select {
+            font-size: 11px;
+            padding: 2px 4px;
+            border-radius: 999px;
+            border: 1px solid #fed7aa;
+            background: #fffbeb;
+            color: #7c2d12;
+        }
+        h3 {
+            font-size: 12px;
+            margin: 8px 0 4px;
+            color: #7c2d12;
+        }
+        .card {
+            border-radius: 10px;
+            border: 1px solid #fed7aa;
+            background: #fffbeb;
+            padding: 8px;
+            font-size: 11px;
+            margin-bottom: 6px;
+        }
+        .counts {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        .pill {
+            padding: 1px 6px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            font-size: 10px;
+        }
+        .pill-low {
+            border-color: rgba(22, 163, 74, 0.4);
+            background: #ecfdf4;
+            color: #166534;
+        }
+        .pill-medium {
+            border-color: rgba(234, 179, 8, 0.6);
+            background: #fffbeb;
+            color: #92400e;
+        }
+        .pill-high {
+            border-color: rgba(248, 113, 113, 0.7);
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+        .sample-list {
+            max-height: 140px;
+            overflow-y: auto;
+            margin-top: 4px;
+            padding-left: 0;
+            list-style: none;
+        }
+        .sample-item {
+            margin-bottom: 4px;
+        }
+        .sample-risk {
+            font-weight: 600;
+            margin-right: 4px;
+        }
+        .sample-url {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .status {
+            font-size: 11px;
+            color: #92400e;
+        }
+        #open-dashboard {
+            width: 100%;
+            margin-top: 6px;
+            padding: 6px 0;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(to right, #fb923c, #f97316);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        #open-dashboard:hover {
+            filter: brightness(1.05);
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="logo-block">
+        <div class="logo-circle">PG</div>
+        <div class="title-block">
+            <span class="title" data-i18n="popup_title">PhishGuard</span>
+            <span class="subtitle" data-i18n="popup_tagline">
+            A friendly view of your links.
+          </span>
+        </div>
+    </div>
+    <select id="popup-lang-select">
+        <option value="en">EN</option>
+        <option value="mk">MK</option>
+    </select>
+</div>
+
+<h3 data-i18n="popup_page_title">Current page links</h3>
+<div class="card">
+    <div id="page-status" class="status" data-i18n="popup_page_wait">
+        Waiting for page report…
+    </div>
+    <div id="page-summary" style="display:none;">
+        <div>
+            <span data-i18n="popup_page_total">Total links found</span>:
+            <strong id="total-count">0</strong>
+        </div>
+        <div class="counts">
+            <div class="pill pill-low">
+                <span data-i18n="popup_low">Low</span>:
+                <span id="low-count">0</span>
+            </div>
+            <div class="pill pill-medium">
+                <span data-i18n="popup_medium">Medium</span>:
+                <span id="medium-count">0</span>
+            </div>
+            <div class="pill pill-high">
+                <span data-i18n="popup_high">High</span>:
+                <span id="high-count">0</span>
+            </div>
+        </div>
+        <ul id="sample-list" class="sample-list"></ul>
+    </div>
+</div>
+
+<h3 data-i18n="popup_net_title">Recent network traffic</h3>
+<div class="card">
+    <div id="net-status" class="status" data-i18n="popup_net_wait">
+        Collecting simple stats…
+    </div>
+    <div id="net-summary" style="display:none;">
+        <div>
+            <span data-i18n="popup_net_total">Total requests</span>:
+            <strong id="net-total">0</strong>
+        </div>
+        <div class="counts">
+            <div class="pill pill-low">
+                <span data-i18n="popup_low">Low</span>:
+                <span id="net-low">0</span>
+            </div>
+            <div class="pill pill-medium">
+                <span data-i18n="popup_medium">Medium</span>:
+                <span id="net-medium">0</span>
+            </div>
+            <div class="pill pill-high">
+                <span data-i18n="popup_high">High</span>:
+                <span id="net-high">0</span>
+            </div>
+        </div>
+        <ul id="net-sample-list" class="sample-list"></ul>
+    </div>
+</div>
+
+<button id="open-dashboard">Open full dashboard</button>
+
+<script src="popup.js"></script>
+</body>
+</html>
