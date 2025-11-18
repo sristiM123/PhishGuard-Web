@@ -1,0 +1,171 @@
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+    background: #fff7ed;
+    color: #1f2933;
+}
+
+.popup {
+    width: 340px;
+    padding: 0.75rem 0.9rem 1rem;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #fed7aa;
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.4rem;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.logo-orb {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: conic-gradient(
+            from 180deg,
+            #f97316,
+            #fde68a,
+            #fb7185,
+            #f97316
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7f1d1d;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.logo h1 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.logo p {
+    margin: 0.1rem 0 0;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.popup-lang select {
+    border-radius: 999px;
+    border: 1px solid #fec89a;
+    background: #fff7ed;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+}
+
+.section {
+    margin-top: 0.6rem;
+}
+
+.section h2 {
+    margin: 0 0 0.2rem;
+    font-size: 0.88rem;
+}
+
+.status {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 0.15rem;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.summary {
+    margin-top: 0.3rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-bottom: 0.4rem;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.3rem;
+    margin-bottom: 0.45rem;
+}
+
+.pill {
+    border-radius: 0.7rem;
+    padding: 0.25rem 0.4rem;
+    text-align: center;
+    font-size: 0.72rem;
+}
+
+.pill span {
+    display: block;
+}
+
+.pill strong {
+    display: block;
+    margin-top: 0.05rem;
+}
+
+.pill-low {
+    background: #ecfdf3;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+.pill-medium {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fed7aa;
+}
+
+.pill-high {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.sample-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 160px;
+    overflow-y: auto;
+}
+
+.sample-item {
+    padding: 0.3rem 0;
+    border-bottom: 1px solid #fed7aa;
+    font-size: 0.74rem;
+}
+
+.sample-item:last-child {
+    border-bottom: none;
+}
+
+.sample-risk {
+    font-weight: 600;
+    margin-right: 0.35rem;
+}
+
+.sample-url {
+    display: block;
+    color: #1f2933;
+    word-break: break-all;
+}
+
+.sample-note {
+    display: block;
+    color: #6b7280;
+    margin-top: 0.1rem;
+}

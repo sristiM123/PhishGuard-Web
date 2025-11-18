@@ -1,0 +1,328 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>PhishGuard Dashboard</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 24px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+            sans-serif;
+            background: #fef3c7;
+            color: #7c2d12;
+        }
+        .shell {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .title-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            background: radial-gradient(circle at top left, #fb923c, #f97316);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        .headline {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .tagline {
+            font-size: 13px;
+            color: #9a3412;
+        }
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+        .pill-note {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #fffbeb;
+            border: 1px solid #fed7aa;
+            font-size: 11px;
+            color: #9a3412;
+        }
+        .mode-control {
+            font-size: 11px;
+            color: #7c2d12;
+        }
+        #mode-select {
+            padding: 2px 6px;
+            border-radius: 999px;
+            border: 1px solid #fed7aa;
+            background: #fffbeb;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .card {
+            border-radius: 14px;
+            border: 1px solid #fed7aa;
+            background: #fffbeb;
+            padding: 12px;
+            box-shadow: 0 8px 20px rgba(248, 171, 88, 0.15);
+        }
+        .card h2 {
+            font-size: 14px;
+            margin: 0 0 6px;
+        }
+        .big-number {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .big-label {
+            font-size: 11px;
+            color: #9a3412;
+        }
+        .badge-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+        .badge-low {
+            border-color: rgba(22, 163, 74, 0.4);
+            background: #ecfdf4;
+            color: #166534;
+        }
+        .badge-medium {
+            border-color: rgba(234, 179, 8, 0.6);
+            background: #fffbeb;
+            color: #92400e;
+        }
+        .badge-high {
+            border-color: rgba(248, 113, 113, 0.7);
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .two-columns {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+            gap: 16px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+        .table th,
+        .table td {
+            padding: 6px 4px;
+            text-align: left;
+            border-bottom: 1px solid #fed7aa;
+        }
+        .table th {
+            font-weight: 600;
+            background: #fef3c7;
+        }
+        .risk-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        .risk-low {
+            background: #22c55e;
+        }
+        .risk-medium {
+            background: #facc15;
+        }
+        .risk-high {
+            background: #f97373;
+        }
+        .url-cell {
+            max-width: 280px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .pill-small {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #fef3c7;
+            border: 1px solid #fed7aa;
+        }
+
+        @media (max-width: 720px) {
+            .two-columns {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="shell">
+    <div class="header">
+        <div class="title-block">
+            <div class="logo-circle">PG</div>
+            <div>
+                <div class="headline">PhishGuard Dashboard</div>
+                <div class="tagline">
+                    A soft, readable overview of how your browser has been seeing
+                    links.
+                </div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="pill-note">
+                Numbers stay on your device only. Nothing is uploaded.
+            </div>
+            <div class="mode-control">
+                Mode:
+                <select id="mode-select">
+                    <option value="parent">Parent (gentle warnings)</option>
+                    <option value="child">Child (stronger protection)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-3">
+        <div class="card">
+            <h2>Pages watched</h2>
+            <div class="big-number" id="pages-total">0</div>
+            <div class="big-label">
+                pages where PhishGuard quietly scanned the links.
+            </div>
+            <div class="badge-row">
+            <span class="badge badge-medium">
+              <strong id="pages-med-high">0</strong> pages with some unusual
+              links
+            </span>
+                <span class="badge badge-high">
+              <strong id="pages-high">0</strong> pages with very risky links
+            </span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Links seen</h2>
+            <div class="big-number" id="links-total">0</div>
+            <div class="big-label">
+                total links that passed under PhishGuard’s eyes.
+            </div>
+            <div class="badge-row">
+            <span class="badge badge-medium">
+              <strong id="links-medium">0</strong> looked a bit unusual
+            </span>
+                <span class="badge badge-high">
+              <strong id="links-high">0</strong> looked very risky
+            </span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Manual checks you asked for</h2>
+            <div class="big-number" id="checks-total">0</div>
+            <div class="big-label">
+                times you right-clicked a link and asked “is this okay?”.
+            </div>
+            <div class="badge-row">
+            <span class="badge badge-low">
+              <strong id="checks-low">0</strong> mostly fine
+            </span>
+                <span class="badge badge-medium">
+              <strong id="checks-medium">0</strong> a bit risky
+            </span>
+                <span class="badge badge-high">
+              <strong id="checks-high">0</strong> very risky
+            </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="two-columns">
+        <div class="card">
+            <h2>Link checks you ran</h2>
+            <p style="font-size:11px; margin-top:0;">
+                These are the most recent links where you explicitly asked
+                PhishGuard to check. Green dots are calmer, red dots deserve extra
+                care.
+            </p>
+            <table class="table" id="checks-table">
+                <thead>
+                <tr>
+                    <th>When</th>
+                    <th>Risk</th>
+                    <th>Link</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>Network safety overview</h2>
+            <p style="font-size:11px; margin-top:0;">
+                A gentle summary of your recent web traffic. It doesn’t see
+                passwords or content, only the addresses being contacted.
+            </p>
+            <div style="display:flex; gap:12px; margin-bottom:8px;">
+                <div>
+                    <div class="big-number" id="net-total">0</div>
+                    <div class="big-label">total requests observed</div>
+                </div>
+                <div class="badge-row" style="align-items:flex-start;">
+              <span class="badge badge-low">
+                <strong id="net-low">0</strong> looked calm
+              </span>
+                    <span class="badge badge-medium">
+                <strong id="net-medium">0</strong> worth a second look
+              </span>
+                    <span class="badge badge-high">
+                <strong id="net-high">0</strong> very unusual
+              </span>
+                </div>
+            </div>
+            <div class="pill-small" style="margin-bottom:4px;">
+                Recent unusual requests
+            </div>
+            <table class="table" id="net-table">
+                <thead>
+                <tr>
+                    <th>Risk</th>
+                    <th>Link</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="dashboard.js"></script>
+</body>
+</html>
