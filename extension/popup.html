@@ -210,6 +210,30 @@
     </div>
 </div>
 
+<div style="margin-bottom:6px;">
+    <div style="font-size:11px; font-weight:600; color:#7c2d12; margin-bottom:4px;">Warning sensitivity</div>
+    <div style="display:flex; gap:4px;">
+        <button class="pg-sens-btn" data-value="quiet"
+                style="flex:1; padding:4px 0; border-radius:999px; border:1px solid #fed7aa;
+                   background:#fffbeb; color:#7c2d12; font-size:10px; cursor:pointer;">
+            Quiet
+        </button>
+        <button class="pg-sens-btn" data-value="balanced"
+                style="flex:1; padding:4px 0; border-radius:999px; border:1px solid #fed7aa;
+                   background:#fffbeb; color:#7c2d12; font-size:10px; cursor:pointer;">
+            Balanced
+        </button>
+        <button class="pg-sens-btn" data-value="strict"
+                style="flex:1; padding:4px 0; border-radius:999px; border:1px solid #fed7aa;
+                   background:#fffbeb; color:#7c2d12; font-size:10px; cursor:pointer;">
+            Strict
+        </button>
+    </div>
+    <div style="font-size:9px; color:#9a3412; margin-top:3px;" id="sens-desc">
+        Balanced: warns on medium and high risk links.
+    </div>
+</div>
+
 <button id="open-dashboard">Open full dashboard</button>
 
 <script src="popup.js"></script>

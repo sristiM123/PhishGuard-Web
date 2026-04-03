@@ -578,237 +578,8 @@ function applyTranslations() {
     });
 }
 
-/* === Analysis logic (same as before) === */
-
-const SUSPICIOUS_TLDS = [
-    ".xyz",
-    ".top",
-    ".click",
-    ".gq",
-    ".tk",
-    ".ml",
-    ".cf",
-    ".zip",
-    ".review"
-];
-
-const PHISHING_KEYWORDS = [
-    "login",
-    "verify",
-    "update",
-    "secure",
-    "account",
-    "banking",
-    "confirm",
-    "password",
-    "signin",
-    "paypal",
-    "office365",
-    "support",
-    "reset"
-];
-
-function isIpAddress(hostname) {
-    const ipv4Regex =
-        /^(25[0-5]|2[0-4]\d|[01]?\d?\d)(\.(25[0-5]|2[0-4]\d|[01]?\d?\d)){3}$/;
-    return ipv4Regex.test(hostname);
-}
-
-function getTld(hostname) {
-    const parts = hostname.split(".");
-    if (parts.length < 2) return "";
-    return "." + parts[parts.length - 1];
-}
-
-function isPunycode(hostname) {
-    return hostname.toLowerCase().includes("xn--");
-}
-
-function shannonEntropy(str) {
-    const s = str.replace(/[^a-zA-Z0-9]/g, "");
-    const len = s.length;
-    if (!len) return 0;
-    const counts = {};
-    for (const ch of s) counts[ch] = (counts[ch] || 0) + 1;
-    let entropy = 0;
-    for (const ch in counts) {
-        const p = counts[ch] / len;
-        entropy -= p * Math.log2(p);
-    }
-    return entropy;
-}
-
-function hasHeavyEncoding(str) {
-    const matches = str.match(/%[0-9A-Fa-f]{2}/g);
-    return matches ? matches.length : 0;
-}
-
-function analyzeUrl(urlString) {
-    let parsedUrl;
-    const factors = [];
-    let score = 0;
-
-    try {
-        if (!/^https?:\/\//i.test(urlString)) {
-            urlString = "http://" + urlString;
-        }
-        parsedUrl = new URL(urlString);
-    } catch {
-        return {
-            valid: false,
-            error: "This does not look like a valid link.",
-            score: 0,
-            factors: [],
-            parsed: null
-        };
-    }
-
-    const { protocol, hostname, pathname, search, href } = parsedUrl;
-    const fullPath = pathname + search;
-
-    if (protocol === "http:") {
-        score += 20;
-        factors.push(
-            "The link uses HTTP, which does not protect your data like HTTPS does."
-        );
-    }
-
-    if (href.includes("@")) {
-        score += 25;
-        factors.push(
-            "The link contains '@', which can be used to hide the real destination."
-        );
-    }
-
-    if (isIpAddress(hostname)) {
-        score += 25;
-        factors.push(
-            "The link goes to a number (IP address) instead of a normal website name."
-        );
-    }
-
-    const tld = getTld(hostname).toLowerCase();
-    if (SUSPICIOUS_TLDS.includes(tld)) {
-        score += 15;
-        factors.push(
-            `The end of the address (${tld}) is less common and often used in scams.`
-        );
-    }
-
-    const subdomainCount = Math.max(hostname.split(".").length - 2, 0);
-    if (subdomainCount >= 3) {
-        score += 15;
-        factors.push(
-            "The link has many dots and parts in the name, which may try to imitate other sites."
-        );
-    } else if (subdomainCount === 2) {
-        score += 5;
-        factors.push(
-            "The link has several parts in the name. That can be fine, but needs attention."
-        );
-    }
-
-    if (href.length > 100 && href.length <= 200) {
-        score += 10;
-        factors.push("The link is quite long, which sometimes hides its purpose.");
-    } else if (href.length > 200) {
-        score += 20;
-        factors.push(
-            "The link is very long. Very long links are often used to hide where you go."
-        );
-    }
-
-    const hyphenCount = (hostname.match(/-/g) || []).length;
-    if (hyphenCount >= 4) {
-        score += 15;
-        factors.push(
-            "The website name has many dashes, which can be used to copy real brand names."
-        );
-    } else if (hyphenCount >= 2) {
-        score += 7;
-        factors.push(
-            "The website name has several dashes. That can be okay, but it is worth a second look."
-        );
-    }
-
-    const lowerPath = fullPath.toLowerCase();
-    const matchedKeywords = PHISHING_KEYWORDS.filter((kw) =>
-        lowerPath.includes(kw)
-    );
-    if (matchedKeywords.length > 0) {
-        score += 20;
-        factors.push(
-            `The link mentions words like: ${matchedKeywords.join(
-                ", "
-            )}. Scammers often use these.`
-        );
-    }
-
-    if (isPunycode(hostname)) {
-        score += 25;
-        factors.push(
-            "The website name uses special characters that can look like normal letters. This can trick people."
-        );
-    }
-
-    const hostEntropy = shannonEntropy(hostname);
-    const pathEntropy = shannonEntropy(pathname);
-
-    if (hostname.length > 12 && hostEntropy > 3.5) {
-        score += 15;
-        factors.push(
-            "The website name looks very random, which is common for temporary scam sites."
-        );
-    }
-    if (pathname.length > 20 && pathEntropy > 4) {
-        score += 10;
-        factors.push(
-            "The link path looks very random, which may be used to hide what it does."
-        );
-    }
-
-    const encodedCount = hasHeavyEncoding(fullPath);
-    if (encodedCount >= 5 && encodedCount < 15) {
-        score += 10;
-        factors.push(
-            "The link has several encoded characters. This can make it harder to read on purpose."
-        );
-    } else if (encodedCount >= 15) {
-        score += 20;
-        factors.push(
-            "The link has a lot of encoded characters, which can strongly hide its real path."
-        );
-    }
-
-    if (score > 100) score = 100;
-
-    let riskLevel;
-    if (score <= 30) riskLevel = "Low";
-    else if (score <= 70) riskLevel = "Medium";
-    else riskLevel = "High";
-
-    return {
-        valid: true,
-        error: null,
-        score,
-        riskLevel,
-        factors,
-        parsed: {
-            protocol,
-            hostname,
-            tld,
-            pathname,
-            search,
-            href,
-            subdomainCount,
-            length: href.length,
-            hyphenCount,
-            hostEntropy: hostEntropy.toFixed(2),
-            pathEntropy: pathEntropy.toFixed(2),
-            encodedCount
-        }
-    };
-}
+/* === Analysis logic: moved to extension/pg-core.js === */
+/* pgAnalyzeUrl() is loaded via <script src="extension/pg-core.js"> in index.html */
 
 /* === UI wiring (unchanged mostly) === */
 
@@ -1150,18 +921,124 @@ form.addEventListener("submit", (e) => {
     e.preventDefault();
     const url = input.value.trim();
     if (!url) return;
-    const result = analyzeUrl(url);
+    const result = pgAnalyzeUrl(url);
     renderResult(result, url);
+    pgRunSafeBrowsingCheck(url);
 });
 
 chips.forEach((chip) => {
     chip.addEventListener("click", () => {
         const url = chip.getAttribute("data-url");
         input.value = url;
-        const result = analyzeUrl(url);
+        const result = pgAnalyzeUrl(url);
         renderResult(result, url);
+        pgRunSafeBrowsingCheck(url);
     });
 });
+
+/* === Safe Browsing UI === */
+
+// Inject Safe Browsing card styles once
+(function injectSbStyles() {
+    const style = document.createElement("style");
+    style.textContent = `
+        #pg-sb-card {
+            margin-top: 12px;
+            border-radius: 12px;
+            border: 1px solid #fed7aa;
+            background: #fffbeb;
+            padding: 14px 16px;
+            font-size: 13px;
+            color: #7c2d12;
+        }
+        #pg-sb-card .sb-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #pg-sb-status {
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .sb-checking { color: #92400e; }
+        .sb-safe {
+            color: #166534;
+            background: #ecfdf4;
+            border: 1px solid rgba(22,163,74,0.3);
+            border-radius: 8px;
+            padding: 6px 10px;
+        }
+        .sb-danger {
+            color: #b91c1c;
+            background: #fef2f2;
+            border: 1px solid rgba(239,68,68,0.4);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-weight: 500;
+        }
+        .sb-warn {
+            color: #92400e;
+            background: #fffbeb;
+            border: 1px solid rgba(234,179,8,0.5);
+            border-radius: 8px;
+            padding: 6px 10px;
+        }
+        .sb-no-key {
+            color: #6b7280;
+            font-size: 11px;
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+function pgGetOrCreateSbCard() {
+    let card = document.getElementById("pg-sb-card");
+    if (!card) {
+        card = document.createElement("div");
+        card.id = "pg-sb-card";
+        card.innerHTML = `
+            <div class="sb-title">🔍 Google Safe Browsing</div>
+            <div id="pg-sb-status"></div>
+        `;
+        // Insert after results card
+        resultsCard.insertAdjacentElement("afterend", card);
+    }
+    return document.getElementById("pg-sb-status");
+}
+
+async function pgRunSafeBrowsingCheck(url) {
+    const statusEl = pgGetOrCreateSbCard();
+    document.getElementById("pg-sb-card").style.display = "block";
+
+    statusEl.className = "sb-checking";
+    statusEl.textContent = "Checking against Google's threat database…";
+
+    const sb = await pgCheckSafeBrowsing(url);
+
+    if (!sb.checked) {
+        if (sb.reason === "no_key") {
+            statusEl.className = "sb-no-key";
+            statusEl.textContent =
+                "Safe Browsing not configured. Add your API key to extension/pg-safebrowsing.js to enable this check.";
+        } else {
+            statusEl.className = "sb-warn";
+            statusEl.textContent =
+                "Could not reach Google Safe Browsing. Check your connection.";
+        }
+        return;
+    }
+
+    if (sb.safe) {
+        statusEl.className = "sb-safe";
+        statusEl.textContent = "✓ Not found in Google's threat database.";
+    } else {
+        statusEl.className = "sb-danger";
+        statusEl.textContent = "🚨 " + sb.label;
+    }
+}
 
 /* === Init === */
 

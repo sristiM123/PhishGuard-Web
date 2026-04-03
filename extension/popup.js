@@ -1,5 +1,3 @@
-
-
 const POPUP_I18N = {
     en: {
         popup_title: "PhishGuard",
@@ -181,4 +179,38 @@ document.addEventListener("DOMContentLoaded", () => {
             renderNetReport(response.netSummary);
         }
     );
+
+    /* --- Sensitivity buttons --- */
+    const SENS_DESCRIPTIONS = {
+        quiet:    "Quiet: only warns on high risk links.",
+        balanced: "Balanced: warns on medium and high risk links.",
+        strict:   "Strict: warns on all links including low risk."
+    };
+
+    function applySensitivity(value) {
+        document.querySelectorAll(".pg-sens-btn").forEach((btn) => {
+            const active = btn.dataset.value === value;
+            btn.style.background = active ? "#f97316" : "#fffbeb";
+            btn.style.color      = active ? "#fff"    : "#7c2d12";
+            btn.style.borderColor = active ? "#f97316" : "#fed7aa";
+            btn.style.fontWeight  = active ? "600"    : "400";
+        });
+        document.getElementById("sens-desc").textContent =
+            SENS_DESCRIPTIONS[value] || SENS_DESCRIPTIONS.balanced;
+    }
+
+    // Load saved sensitivity
+    chrome.storage.local.get("pg_sensitivity", (res) => {
+        const saved = res.pg_sensitivity || "balanced";
+        applySensitivity(saved);
+    });
+
+    // Handle button clicks
+    document.querySelectorAll(".pg-sens-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const value = btn.dataset.value;
+            chrome.storage.local.set({ pg_sensitivity: value });
+            applySensitivity(value);
+        });
+    });
 });

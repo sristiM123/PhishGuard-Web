@@ -1,3 +1,6 @@
+importScripts("pg-core.js");
+importScripts("pg-safebrowsing.js");
+
 const STORAGE_KEY = "pg_dashboard_data";
 let mode = "parent"; // "parent" or "child"
 
@@ -47,41 +50,12 @@ function persist() {
     });
 }
 
-/* ---------- Lightweight scoring (same as content script) ---------- */
-
-function simpleAnalyzeUrl(url) {
-    try {
-        if (!/^https?:\/\//i.test(url)) url = "http://" + url;
-        const u = new URL(url);
-        const href = u.href.toLowerCase();
-        let score = 0;
-
-        if (u.protocol === "http:") score += 20;
-        if (href.includes("@")) score += 25;
-        if (/\d+\.\d+\.\d+\.\d+/.test(u.hostname)) score += 25;
-        if (href.length > 180) score += 15;
-
-        const kws = ["login", "signin", "verify", "reset", "password", "bank"];
-        if (kws.some((kw) => href.includes(kw))) score += 20;
-
-        if (score > 100) score = 100;
-
-        let risk = "Low";
-        if (score > 30 && score <= 70) risk = "Medium";
-        else if (score > 70) risk = "High";
-
-        return { valid: true, score, risk, url: u.href };
-    } catch (e) {
-        return { valid: false, score: 0, risk: "Low", url };
-    }
-}
-
 /* ---------- Network summary ---------- */
 
 chrome.webRequest.onCompleted.addListener(
     (details) => {
         const url = details.url;
-        const { score, risk } = simpleAnalyzeUrl(url);
+        const { score, riskLevel: risk } = pgAnalyzeUrl(url);
         const ns = dashboardData.netSummary;
 
         ns.total += 1;
@@ -130,7 +104,8 @@ chrome.runtime.onStartup.addListener(() => {
 
 chrome.contextMenus.onClicked.addListener((info) => {
     if (info.menuItemId === "pg-check-link" && info.linkUrl) {
-        const { score, risk, url } = simpleAnalyzeUrl(info.linkUrl);
+        const { score, riskLevel: risk, parsed } = pgAnalyzeUrl(info.linkUrl);
+        const url = parsed ? parsed.href : info.linkUrl;
 
         // Save into linkChecks
         const lc = dashboardData.linkChecks;
@@ -170,6 +145,19 @@ chrome.contextMenus.onClicked.addListener((info) => {
             iconUrl: "icon128.png",
             title: "PhishGuard link check",
             message
+        });
+
+        // Safe Browsing check — runs after the heuristic notification
+        pgCheckSafeBrowsing(url).then((sb) => {
+            if (!sb.checked) return; // no key or network error — skip silently
+            if (!sb.safe) {
+                chrome.notifications.create({
+                    type: "basic",
+                    iconUrl: "icon128.png",
+                    title: "⚠️ PhishGuard — Google Safe Browsing Alert",
+                    message: sb.label
+                });
+            }
         });
     }
 });

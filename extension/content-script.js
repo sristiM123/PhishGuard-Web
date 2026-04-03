@@ -1,38 +1,3 @@
-function simpleAnalyzeUrl(url) {
-    try {
-        if (!/^https?:\/\//i.test(url)) url = "http://" + url;
-        const u = new URL(url);
-        const href = u.href.toLowerCase();
-        let score = 0;
-
-        // Insecure protocol
-        if (u.protocol === "http:") score += 20;
-
-        // @ in URL
-        if (href.includes("@")) score += 25;
-
-        // IP instead of hostname
-        if (/\d+\.\d+\.\d+\.\d+/.test(u.hostname)) score += 25;
-
-        // Very long
-        if (href.length > 180) score += 15;
-
-        // Phishy keywords
-        const kws = ["login", "signin", "verify", "reset", "password", "bank"];
-        if (kws.some((kw) => href.includes(kw))) score += 20;
-
-        if (score > 100) score = 100;
-
-        let risk = "Low";
-        if (score > 30 && score <= 70) risk = "Medium";
-        else if (score > 70) risk = "High";
-
-        return { valid: true, score, risk, url: u.href };
-    } catch (e) {
-        return { valid: false, score: 0, risk: "Low", url };
-    }
-}
-
 /* ---------- Page report + smart popup styling ---------- */
 
 (function () {
@@ -180,6 +145,17 @@ function simpleAnalyzeUrl(url) {
   `;
     document.documentElement.appendChild(style);
 
+    let pgSensitivity = "balanced"; // default
+    chrome.storage.local.get("pg_sensitivity", (res) => {
+        if (res && res.pg_sensitivity) pgSensitivity = res.pg_sensitivity;
+    });
+
+    function shouldDecorate(risk) {
+        if (pgSensitivity === "quiet")  return risk === "High";
+        if (pgSensitivity === "strict") return risk === "Medium" || risk === "High";
+        return risk === "High"; // balanced — medium counted but not decorated
+    }
+
     function isEmailHost() {
         return EMAIL_HOSTS.includes(window.location.host);
     }
@@ -215,7 +191,7 @@ function simpleAnalyzeUrl(url) {
                 ev.stopPropagation();
                 chrome.runtime.sendMessage({
                     type: "PG_OPEN_WARNING",
-                    url: result.url
+                    url: result.parsed ? result.parsed.href : ""
                 });
             },
             { capture: true }
@@ -231,17 +207,18 @@ function simpleAnalyzeUrl(url) {
         a.dataset.pgProcessed = "1";
         report.total += 1;
 
-        const result = simpleAnalyzeUrl(href);
+        const result = pgAnalyzeUrl(href);
         if (!result.valid) return;
         report.analyzed += 1;
 
-        const { score, risk, url } = result;
+        const { score, riskLevel: risk, parsed } = result;
+        const resolvedUrl = parsed ? parsed.href : href;
 
         if (risk === "Low") report.low += 1;
         else if (risk === "Medium") report.medium += 1;
         else report.high += 1;
 
-        if (risk === "High") {
+        if (shouldDecorate(risk)) {
             decorateHighRiskLink(a, result);
         }
 
@@ -249,7 +226,7 @@ function simpleAnalyzeUrl(url) {
             report.samples.length < MAX_SAMPLES &&
             (risk === "Medium" || risk === "High")
         ) {
-            report.samples.push({ href: url, risk, score });
+            report.samples.push({ href: resolvedUrl, risk, score });
         }
     }
 
