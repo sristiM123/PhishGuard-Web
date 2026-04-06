@@ -12,7 +12,7 @@
 // Privacy note: this function is ONLY called when a user explicitly checks a URL.
 // Links are never sent to Google passively or in bulk.
 
-const PG_SAFE_BROWSING_KEY = "AIzaSyDFb1wjkRoZ-cu_7sb47O-99c-rV37pK-A"; // <-- paste your API key here
+const PG_SAFE_BROWSING_KEY = ""; // <-- paste your API key here
 
 const PG_SB_ENDPOINT =
     "https://safebrowsing.googleapis.com/v4/threatMatches:find";
